@@ -1,0 +1,6 @@
+@MQTT2HTTPS_HostAddress = http://localhost:5228
+
+GET {{MQTT2HTTPS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
