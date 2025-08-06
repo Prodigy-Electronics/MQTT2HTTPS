@@ -32,8 +32,13 @@ public class Program
         builder.Services.AddMqttConnectionHandler();
         builder.Services.AddConnections();
 
-        builder.Services.AddSingleton<MQTTServer>();
         builder.Services.AddSingleton<MqttClientFactory>();
+        builder.Services.AddHostedService<HTTPBridgeService>();
+        builder.Services.AddHttpClient("HTTPBridge", (client) =>
+        {
+            client.BaseAddress = new Uri(config[EnvironmentKeys.HTTP_SERVER_HOST] 
+                ?? throw new NullReferenceException());
+        });
 
         builder.Services.AddSerilog((services, lc) =>
         {
@@ -42,9 +47,8 @@ public class Program
                 .Enrich.FromLogContext()
                 .WriteTo.Console();
         });
-
+        
         var app = builder.Build();
-
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -58,6 +62,7 @@ public class Program
 
         app.UseMqttServer(server =>
         {
+            server.StartedAsync += MQTTServer.ServerStartedAsync;
             server.ValidatingConnectionAsync += MQTTServer.ValidateConnectionAsync;
             server.ClientConnectedAsync += MQTTServer.OnClientConnectedAsync;
         });

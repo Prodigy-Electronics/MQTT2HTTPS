@@ -4,6 +4,8 @@ namespace MQTT2HTTPS.Services;
 
 public sealed class MQTTServer
 {
+    public static event Func<EventArgs, Task>? OnServerStarted = null;
+
     public static Task OnClientConnectedAsync(ClientConnectedEventArgs args)
     {
         Log.Information($"Client '{args.ClientId}' connected");
@@ -14,5 +16,10 @@ public sealed class MQTTServer
     {
         Log.Information($"Accepting Client '{args.ClientId}'");
         return Task.CompletedTask;
+    }
+
+    public static async Task ServerStartedAsync(EventArgs args)
+    {
+        await (OnServerStarted?.Invoke(args) ?? Task.CompletedTask);
     }
 }
