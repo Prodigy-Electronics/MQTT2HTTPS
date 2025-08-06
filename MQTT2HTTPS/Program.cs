@@ -1,11 +1,12 @@
 using MQTT2HTTPS.Services;
+using MQTTnet;
 using MQTTnet.AspNetCore;
 
 namespace MQTT2HTTPS;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
@@ -19,8 +20,7 @@ public class Program
         builder.WebHost.UseKestrel(options =>
         {
             options.ListenAnyIP(1883, o => o.UseMqtt());
-            options.ListenAnyIP(8080);
-            options.ListenAnyIP(8081, o => o.UseHttps());
+            options.ListenAnyIP(int.Parse(config["ASPNETCORE_HTTP_PORTS"] ?? "8080"));
         });
         builder.Services.AddControllers();
         builder.Services.AddOpenApiDocument();
@@ -31,8 +31,9 @@ public class Program
         });
         builder.Services.AddMqttConnectionHandler();
         builder.Services.AddConnections();
-        var mqttServer = new MQTTServer(config);
-        builder.Services.AddSingleton(mqttServer);
+
+        builder.Services.AddSingleton<MQTTServer>();
+        builder.Services.AddSingleton<MqttClientFactory>();
 
         builder.Services.AddSerilog((services, lc) =>
         {
@@ -52,19 +53,17 @@ public class Program
             app.UseSwaggerUi();
         }
 
-        app.UseHttpsRedirection();
         app.UseSerilogRequestLogging();
         app.UseAuthorization();
 
         app.UseMqttServer(server =>
         {
-            server.ValidatingConnectionAsync += mqttServer.ValidateConnectionAsync;
-            server.ClientConnectedAsync += mqttServer.OnClientConnectedAsync;
-            server.InterceptingPublishAsync += mqttServer.MessagePublishedAsync;
+            server.ValidatingConnectionAsync += MQTTServer.ValidateConnectionAsync;
+            server.ClientConnectedAsync += MQTTServer.OnClientConnectedAsync;
         });
 
         app.MapControllers();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

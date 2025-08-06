@@ -20,9 +20,8 @@
       "commandName": "Docker",
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "environmentVariables": {
-        "ASPNETCORE_HTTPS_PORTS": "8081",
         "ASPNETCORE_HTTP_PORTS": "8080",
-        "MQTT_POST_ENDPOINT": "http://localhost:9000/api/mqtt/data"
+        "MQTT_POST_ENDPOINT": "http://backend:3000/api/mqtt/endpoint"
       },
       "publishAllPorts": true,
       "useSSL": true

@@ -1,0 +1,15 @@
+services:
+  mqtt2https:
+    image: ${DOCKER_REGISTRY-}mqtt2https
+    build:
+      context: .
+      dockerfile: MQTT2HTTPS/Dockerfile
+    ports:
+      - 1883:1883
+    environment:
+      MQTT_POST_ENDPOINT: http://backend:3000/api/mqtt/endpoint
+
+networks:
+  default:
+    external: true
+    name: iot-dashboard
